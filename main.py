@@ -15,3 +15,15 @@ def greet():
 @app.get("/products")
 def get_all_products():
     return products
+
+@app.get("/products/{product_id}")
+def get_product(product_id: int):
+    for product in products:
+        if product.id == product_id:
+            return product
+    return {"error": "Product not found"}
+
+@app.post("/products")
+def create_product(product: Product):
+    products.append(product)
+    return product
