@@ -1,2 +1,7 @@
-def greet():   return "Hello, World!"
+from fastapi import FastAPI
 
+app =FastAPI()
+
+@app.get("/")
+def greet():
+    return "welcome to fastapi"
