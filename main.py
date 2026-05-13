@@ -13,6 +13,19 @@ products = [
     Product(id=2, name="Laptop", price=1000.0, quantity=5)
 ]
 
+
+def init_db():
+    db = session()
+
+    count = db.query(database_model.Product).count()
+    if count ==0:
+        for product in products:
+            db.add(database_model.Product(**product.model_dump()))
+        db.commit()
+
+
+init_db()
+
 @app.get("/")
 def greet():
     return "Welcome to FastAPI"
@@ -20,9 +33,9 @@ def greet():
 @app.get("/products")
 def get_all_products():
     # db connection
-    db = session()
+    # db = session()
     # query
-    db.query()
+    # db.query()
     return products
 
 @app.get("/products/{product_id}")
