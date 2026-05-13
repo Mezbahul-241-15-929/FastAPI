@@ -1,21 +1,32 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Depends
 from models import Product
 
-from database import session,engine
+from database import SessionLocal,engine
 import database_model
+
+from sqlalchemy.orm import Session
 
 app = FastAPI()
 
 database_model.Base.metadata.create_all(bind=engine)
+
+
 
 products = [
     Product(id=1, name="Phone", price=500.0, quantity=10),
     Product(id=2, name="Laptop", price=1000.0, quantity=5)
 ]
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 def init_db():
-    db = session()
+    db = SessionLocal()
 
     count = db.query(database_model.Product).count()
     if count ==0:
@@ -31,37 +42,42 @@ def greet():
     return "Welcome to FastAPI"
 
 @app.get("/products")
-def get_all_products():
-    # db connection
-    # db = session()
-    # query
-    # db.query()
-    return products
+def get_all_products(db: Session = Depends(get_db)):
+    db_products = db.query(database_model.Product).all()
+    return db_products
 
 @app.get("/products/{product_id}")
-def get_product(product_id: int):
-    for product in products:
-        if product.id == product_id:
-            return product
+def get_product(product_id: int, db: Session = Depends(get_db)):
+    db_product = db.query(database_model.Product).filter(database_model.Product.id == product_id).first()
+    if db_product:
+        return db_product
     return {"error": "Product not found"}
 
 @app.post("/products")
-def create_product(product: Product):
-    products.append(product)
+def create_product(product: Product,db: Session = Depends(get_db)):
+    db.add(database_model.Product(**product.model_dump()))
+    db.commit()
     return product
 
 @app.put("/products/{id}")
-def update_product(id: int, product: Product):
-    for i in range(len(products)):
-        if products[i].id == id:
-            products[i] = product
-            return {"message": "Product updated successfully"}
-    return {"error": "Product not found"}
+def update_product(id: int, product: Product, db: Session = Depends(get_db)):
+    db_product = db.query(database_model.Product).filter(database_model.Product.id == id).first()
+    if db_product:
+        db_product.name = product.name
+        db_product.price = product.price
+        db_product.quantity = product.quantity
+        db.commit()
+        return "Product updated successfully"
+    
+    else:
+        return {"error": "Product not found"}
 
 @app.delete("/products/{id}")
-def delete_product(id: int):
-    for i in range(len(products)):
-        if products[i].id == id:
-            del products[i]
-            return {"message": "Product deleted successfully"}
-    return {"error": "Product not found"}
+def delete_product(id: int,db: Session = Depends(get_db)):
+    db_product = db.query(database_model.Product).filter(database_model.Product.id == id).first()
+    if db_product:
+        db.delete(db_product)
+        db.commit()
+        return "Product deleted successfully"
+    else: return {"error": "Product not found"}
+        
