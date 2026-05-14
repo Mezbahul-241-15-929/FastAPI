@@ -10,3 +10,4 @@ class Product(Base):
     name = Column(String, index=True)
     price = Column(Float)
     quantity = Column(Integer)
+    description = Column(String)

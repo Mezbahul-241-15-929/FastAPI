@@ -24,8 +24,8 @@ database_model.Base.metadata.create_all(bind=engine)
 
 
 products = [
-    Product(id=1, name="Phone", price=500.0, quantity=10),
-    Product(id=2, name="Laptop", price=1000.0, quantity=5)
+    Product(id=1, name="Phone", price=500.0, quantity=10, description="A smartphone"),
+    Product(id=2, name="Laptop", price=1000.0, quantity=5, description="A high-performance laptop")
 ]
 
 def get_db():
@@ -76,6 +76,7 @@ def update_product(id: int, product: Product, db: Session = Depends(get_db)):
     if db_product:
         db_product.name = product.name
         db_product.price = product.price
+        db_product.description = product.description
         db_product.quantity = product.quantity
         db.commit()
         return "Product updated successfully"
